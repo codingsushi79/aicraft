@@ -50,7 +50,10 @@ public final class ChatService implements AutoCloseable {
     public CompletableFuture<ChatRecord> startChat(UUID playerUuid, String username, ChatSource source) {
         return CompletableFuture.supplyAsync(() -> createChatRecord(playerUuid, username, source), dbExecutor)
                 .thenApply(record -> {
-                    sessionManager.start(playerUuid, record);
+                    ChatSession session = sessionManager.start(playerUuid, record);
+                    if (!pluginConfig.systemPrompt().isBlank()) {
+                        session.addRawMessage(new ChatMessage("system", pluginConfig.systemPrompt()));
+                    }
                     return record;
                 });
     }

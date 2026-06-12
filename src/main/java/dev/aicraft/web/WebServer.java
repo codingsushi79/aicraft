@@ -13,6 +13,7 @@ import dev.aicraft.model.WebSession;
 import dev.aicraft.service.ChatService;
 import dev.aicraft.service.LinkService;
 import dev.aicraft.service.RateLimitService;
+import dev.aicraft.util.ChatText;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -274,7 +275,7 @@ public final class WebServer implements AutoCloseable {
                     .map(message -> Map.of(
                             "id", message.id(),
                             "role", message.role(),
-                            "content", message.content(),
+                            "content", ChatText.sanitizeForDisplay(message.content()),
                             "createdAt", message.createdAt()
                     ))
                     .toList());
@@ -297,7 +298,7 @@ public final class WebServer implements AutoCloseable {
         try {
             chatService.reopenChatById(session.get().playerUuid(), chatId).join();
             String reply = chatService.sendMessage(session.get().playerUuid(), content.trim(), null).join();
-            json(exchange, 200, Map.of("reply", reply));
+            json(exchange, 200, Map.of("reply", ChatText.sanitizeForDisplay(reply)));
         } catch (ChatService.ChatException e) {
             error(exchange, 404, e.getMessage());
         } catch (Exception e) {

@@ -2,6 +2,7 @@ package dev.aicraft.command;
 
 import dev.aicraft.AicraftPlugin;
 import dev.aicraft.service.ChatService;
+import dev.aicraft.util.ChatText;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
@@ -89,9 +90,13 @@ public final class AiCommand implements CommandExecutor {
     }
 
     private static void sendWrappedReply(Player player, String reply) {
-        for (String line : reply.split("\n")) {
+        for (String line : ChatText.linesForChat(reply)) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
             player.sendMessage(ChatMessages.PREFIX.append(Component.text("AI: ", NamedTextColor.GREEN))
-                    .append(Component.text(line, NamedTextColor.WHITE)));
+                    .append(Component.text(trimmed, NamedTextColor.WHITE)));
         }
     }
 }

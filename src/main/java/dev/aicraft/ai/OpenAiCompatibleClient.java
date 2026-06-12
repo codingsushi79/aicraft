@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.aicraft.config.PluginConfig;
+import dev.aicraft.util.ChatText;
 
 import java.io.IOException;
 import java.net.URI;
@@ -64,6 +65,17 @@ public final class OpenAiCompatibleClient {
         }
         body.add("messages", messageArray);
 
+        if (!config.stopSequences().isEmpty()) {
+            JsonArray stop = new JsonArray();
+            for (String sequence : config.stopSequences()) {
+                stop.add(sequence);
+            }
+            body.add("stop", stop);
+        }
+        if (config.hasTemperature()) {
+            body.addProperty("temperature", config.temperature());
+        }
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(config.endpoint()))
                 .timeout(Duration.ofSeconds(config.timeoutSeconds()))
@@ -97,16 +109,37 @@ public final class OpenAiCompatibleClient {
             if (message == null || !message.has("content")) {
                 throw new AiException("API response missing message content: " + truncate(responseBody));
             }
-            String content = message.get("content").getAsString();
+            String content = extractContent(message);
+            content = ChatText.sanitizeModelOutput(content);
             if (content.isBlank()) {
                 throw new AiException("AI returned an empty reply.");
             }
-            return content.trim();
+            return content;
         } catch (AiException e) {
             throw e;
         } catch (Exception e) {
             throw new AiException("Failed to parse API response: " + e.getMessage(), e);
         }
+    }
+
+    private static String extractContent(JsonObject message) throws AiException {
+        if (!message.has("content") || message.get("content").isJsonNull()) {
+            throw new AiException("API response missing message content.");
+        }
+        if (message.get("content").isJsonArray()) {
+            StringBuilder builder = new StringBuilder();
+            for (var element : message.getAsJsonArray("content")) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+                JsonObject part = element.getAsJsonObject();
+                if (part.has("text") && !part.get("text").isJsonNull()) {
+                    builder.append(part.get("text").getAsString());
+                }
+            }
+            return builder.toString().trim();
+        }
+        return message.get("content").getAsString().trim();
     }
 
     private static String truncate(String text) {

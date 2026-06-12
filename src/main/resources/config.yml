@@ -14,10 +14,18 @@ endpoint: "http://localhost:11434/v1/chat/completions"
 api-key: "ollama"
 
 # Model name as understood by your provider
-model: "llama3.2"
+model: "gemma3n:e2b"
 
 # Optional system prompt prepended to every new chat
-system-prompt: "You are a helpful assistant inside a Minecraft server. Keep replies concise and game-friendly."
+system-prompt: "You are a helpful assistant inside a Minecraft server. Keep replies concise and game-friendly. Use plain text paragraphs only—no markdown dividers, underscores, or special tokens."
+
+# Stop sequences sent to the API (prevents Gemma/Ollama template tokens leaking into replies)
+stop-sequences:
+  - "<end_of_turn>"
+  - "<start_of_turn>"
+
+# Optional sampling temperature (-1 = omit, let the provider default). Gemma 3n works well at 1.0.
+temperature: 1.0
 
 # HTTP request timeout in seconds
 timeout-seconds: 120

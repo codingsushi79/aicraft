@@ -59,12 +59,25 @@ function showLinkPanel() {
   activeChatId = null;
 }
 
+function appendMessageParagraphs(container, content) {
+  const paragraphs = content.split(/\n{2,}/);
+  for (const paragraph of paragraphs) {
+    const trimmed = paragraph.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const p = document.createElement("p");
+    p.textContent = trimmed;
+    container.appendChild(p);
+  }
+}
+
 function renderMessages(messages) {
   messagesEl.innerHTML = "";
   for (const message of messages) {
     const div = document.createElement("div");
     div.className = `message ${message.role}`;
-    div.textContent = message.content;
+    appendMessageParagraphs(div, message.content);
     messagesEl.appendChild(div);
   }
   messagesEl.scrollTop = messagesEl.scrollHeight;
