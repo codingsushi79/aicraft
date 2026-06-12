@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.aicraft"
-version = "1.1.0"
+version = findProperty("version")?.toString() ?: "1.1.0"
 
 repositories {
     mavenCentral()
