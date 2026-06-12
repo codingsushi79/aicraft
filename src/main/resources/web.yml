@@ -1,0 +1,37 @@
+##########################################
+#  ____            _     _ __  __  ____  #
+# / ___| _   _ ___| |__ (_)  \/  |/ ___| #
+# \___ \| | | / __| '_ \| | |\/| | |     #
+#  ___) | |_| \__ \ | | | | |  | | |___  #
+# |____/ \__,_|___/_| |_|_|_|  |_|\____| #
+##########################################
+# Web UI settings (separate from config.yml AI endpoint settings)
+
+enabled: true
+port: 8765
+bind-address: "0.0.0.0"
+
+database:
+  # sqlite or postgres
+  type: sqlite
+  sqlite-file: "aicraft.db"
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: "aicraft"
+    username: "aicraft"
+    password: ""
+
+rate-limits:
+  # Used when no aicraft.chats.<n> permission is found (LuckPerms / permissions plugins)
+  default-chats-per-day: 50
+
+linking:
+  # Minutes before a link request or web session expires
+  link-code-expiry-minutes: 2
+  web-session-days: 30
+
+# Permission nodes (grant via LuckPerms or your permissions plugin):
+#   aicraft.chats.unlimited  — no daily chat cap
+#   aicraft.chats.<number>   — e.g. aicraft.chats.50 allows 50 new chats per 24h
+# Highest matching aicraft.chats.<number> wins. Offline players use LuckPerms if installed.

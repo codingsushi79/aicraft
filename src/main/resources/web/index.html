@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aicraft Web Chat</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Aicraft</h1>
+      <p class="subtitle">Private AI chat for your Minecraft account</p>
+    </header>
+
+    <section id="link-panel" class="panel">
+      <h2>Link Minecraft account</h2>
+      <ol>
+        <li>Enter your Minecraft username below.</li>
+        <li>Join the server and run <code>/ailink</code>.</li>
+        <li>Enter the code shown only to you in-game.</li>
+      </ol>
+      <label>
+        Username
+        <input id="link-username" type="text" placeholder="Steve" autocomplete="username">
+      </label>
+      <div id="link-step-start">
+        <button id="link-start-btn" type="button">Continue</button>
+      </div>
+      <div id="link-step-code" class="hidden">
+        <p class="hint">Waiting for <code>/ailink</code> in-game…</p>
+        <label>
+          Link code
+          <input id="link-code" type="text" placeholder="ABC123" autocomplete="one-time-code">
+        </label>
+        <button id="link-verify-btn" type="button">Confirm link</button>
+      </div>
+      <p id="link-error" class="error hidden"></p>
+    </section>
+
+    <section id="chat-panel" class="panel hidden">
+      <div class="toolbar">
+        <div>
+          <strong id="current-user"></strong>
+          <span class="hint">Chat history is saved to your account.</span>
+        </div>
+        <button id="logout-btn" type="button" class="secondary">Log out</button>
+      </div>
+
+      <div class="layout">
+        <aside>
+          <div class="aside-header">
+            <h2>Your chats</h2>
+            <button id="new-chat-btn" type="button">New chat</button>
+          </div>
+          <ul id="chat-list"></ul>
+        </aside>
+
+        <main>
+          <div id="chat-header" class="chat-header">
+            <h2 id="active-chat-title">Select a chat</h2>
+            <p id="active-chat-meta" class="hint"></p>
+          </div>
+          <div id="messages" class="messages"></div>
+          <form id="message-form" class="message-form">
+            <textarea id="message-input" rows="3" placeholder="Message the AI…" disabled></textarea>
+            <button id="send-btn" type="submit" disabled>Send</button>
+          </form>
+          <p id="chat-error" class="error hidden"></p>
+        </main>
+      </div>
+    </section>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

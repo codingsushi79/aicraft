@@ -1,0 +1,46 @@
+##########################################
+#  ____            _     _ __  __  ____  #
+# / ___| _   _ ___| |__ (_)  \/  |/ ___| #
+# \___ \| | | / __| '_ \| | |\/| | |     #
+#  ___) | |_| \__ \ | | | | |  | | |___  #
+# |____/ \__,_|___/_| |_|_|_|  |_|\____| #
+##########################################
+name: Aicraft
+version: '@version@'
+main: dev.aicraft.AicraftPlugin
+api-version: '1.21'
+description: Private in-game AI chat via OpenAI-compatible endpoints (Ollama, etc.)
+author: SushiMC
+
+commands:
+  newchat:
+    description: Start a private AI chat
+    usage: /newchat
+    permission: aicraft.use
+  endchat:
+    description: End your private AI chat
+    usage: /endchat
+    permission: aicraft.use
+  ai:
+    description: Send a message in your active AI chat
+    usage: /ai <message>
+    permission: aicraft.use
+  reopenchat:
+    description: Reopen one of your saved chats by id
+    usage: /reopenchat <id>
+    permission: aicraft.use
+  ailink:
+    description: Link your Minecraft account to the Aicraft web UI
+    usage: /ailink
+    permission: aicraft.web
+
+permissions:
+  aicraft.use:
+    description: Use Aicraft in-game chat commands
+    default: true
+  aicraft.web:
+    description: Link your account to the Aicraft web UI
+    default: true
+  aicraft.chats.unlimited:
+    description: No daily limit on new chats
+    default: op

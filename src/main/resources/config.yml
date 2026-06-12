@@ -1,0 +1,26 @@
+##########################################
+#  ____            _     _ __  __  ____  #
+# / ___| _   _ ___| |__ (_)  \/  |/ ___| #
+# \___ \| | | / __| '_ \| | |\/| | |     #
+#  ___) | |_| \__ \ | | | | |  | | |___  #
+# |____/ \__,_|___/_| |_|_|_|  |_|\____| #
+##########################################
+# OpenAI-compatible API endpoint (works with Ollama, vLLM, Unsloth, OpenAI, etc.)
+# Ollama example: http://localhost:11434/v1/chat/completions
+# OpenAI example: https://api.openai.com/v1/chat/completions
+endpoint: "http://localhost:11434/v1/chat/completions"
+
+# API key — use "ollama" or any placeholder for local servers that ignore auth
+api-key: "ollama"
+
+# Model name as understood by your provider
+model: "llama3.2"
+
+# Optional system prompt prepended to every new chat
+system-prompt: "You are a helpful assistant inside a Minecraft server. Keep replies concise and game-friendly."
+
+# HTTP request timeout in seconds
+timeout-seconds: 120
+
+# Max prior messages kept in context (user + assistant pairs)
+max-history-messages: 20
