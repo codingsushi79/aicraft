@@ -1,10 +1,11 @@
 plugins {
     java
+    `maven-publish`
     id("com.gradleup.shadow") version "8.3.5"
 }
 
 group = "dev.aicraft"
-version = findProperty("version")?.toString() ?: "1.1.0"
+version = (findProperty("pluginVersion") ?: "1.1.0").toString()
 
 repositories {
     mavenCentral()
@@ -51,5 +52,37 @@ tasks.processResources {
             org.apache.tools.ant.filters.ReplaceTokens::class,
             "tokens" to mapOf("version" to version.toString()),
         )
+    }
+}
+
+tasks.register("printVersion") {
+    doLast {
+        println(project.version)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("gpr") {
+            groupId = project.group.toString()
+            artifactId = "aicraft"
+            version = project.version.toString()
+            artifact(tasks.shadowJar)
+            pom {
+                name.set("Aicraft")
+                description.set("Private AI chat for Paper Minecraft servers")
+                url.set("https://github.com/codingsushi79/aicraft")
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/codingsushi79/aicraft")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }

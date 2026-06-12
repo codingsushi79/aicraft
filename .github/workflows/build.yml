@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   build:
@@ -32,9 +33,18 @@ jobs:
       - name: Build with Gradle
         run: |
           if [ -n "${VERSION:-}" ]; then
-            ./gradlew build -Pversion="$VERSION" --no-daemon
+            ./gradlew build -PpluginVersion="$VERSION" --no-daemon
           else
             ./gradlew build --no-daemon
+          fi
+
+      - name: Read plugin version
+        id: version
+        run: |
+          if [ -n "${VERSION:-}" ]; then
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(./gradlew -q printVersion --no-daemon)" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload plugin JAR
@@ -45,10 +55,24 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Aicraft v${{ steps.version.outputs.version }}
           files: build/libs/*.jar
           generate_release_notes: true
+          make_latest: true
           draft: false
-          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
+          prerelease: ${{ contains(steps.version.outputs.version, '-rc') || contains(steps.version.outputs.version, '-beta') || contains(steps.version.outputs.version, '-alpha') }}
+
+      - name: Publish to GitHub Packages
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
+        run: |
+          if [ -n "${VERSION:-}" ]; then
+            ./gradlew publish -PpluginVersion="$VERSION" --no-daemon
+          else
+            ./gradlew publish --no-daemon
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
