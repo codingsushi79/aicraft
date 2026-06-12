@@ -17,7 +17,6 @@ dependencies {
     compileOnly("net.luckperms:api:5.4")
 
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation("io.javalin:javalin:6.6.0")
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.xerial:sqlite-jdbc:3.49.1.0")
     implementation("org.postgresql:postgresql:42.7.5")
@@ -26,9 +25,7 @@ dependencies {
 tasks.shadowJar {
     archiveClassifier.set("")
     relocate("com.google.gson", "dev.aicraft.libs.gson")
-    relocate("io.javalin", "dev.aicraft.libs.javalin")
-    relocate("org.eclipse.jetty", "dev.aicraft.libs.jetty")
-    relocate("com.zaxxer.hikari", "dev.aicraft.libs.hikari")
+    mergeServiceFiles()
 }
 
 tasks.build {

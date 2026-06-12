@@ -57,8 +57,14 @@ public final class AicraftPlugin extends JavaPlugin {
         }
 
         if (webConfig.enabled()) {
-            webServer = new WebServer(webConfig, linkService, chatService, getLogger());
-            webServer.start();
+            try {
+                webServer = new WebServer(webConfig, linkService, chatService, getLogger());
+                webServer.start();
+            } catch (Exception e) {
+                getLogger().severe("Web UI failed to start (in-game chat still works): " + e.getMessage());
+                e.printStackTrace();
+                webServer = null;
+            }
         }
 
         getLogger().info("Aicraft enabled — endpoint: " + pluginConfig.endpoint());
