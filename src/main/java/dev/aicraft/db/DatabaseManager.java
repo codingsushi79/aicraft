@@ -27,7 +27,9 @@ public final class DatabaseManager implements AutoCloseable {
         if (config.type() == WebConfig.DatabaseConfig.DatabaseType.SQLITE) {
             File dbFile = new File(dataFolder, config.sqliteFile());
             hikari.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
-            hikari.setMaximumPoolSize(1);
+            hikari.setMaximumPoolSize(4);
+            hikari.setMinimumIdle(1);
+            hikari.setConnectionInitSql("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;");
         } else {
             hikari.setJdbcUrl("jdbc:postgresql://"
                     + config.postgresHost() + ":"
@@ -38,6 +40,8 @@ public final class DatabaseManager implements AutoCloseable {
             hikari.setMaximumPoolSize(10);
         }
         hikari.setPoolName("aicraft-db");
+        hikari.setConnectionTimeout(5_000);
+        hikari.setLeakDetectionThreshold(10_000);
         return new HikariDataSource(hikari);
     }
 

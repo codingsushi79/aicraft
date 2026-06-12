@@ -1,6 +1,6 @@
 package dev.aicraft.command;
 
-import dev.aicraft.service.ChatService;
+import dev.aicraft.AicraftPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
@@ -11,10 +11,10 @@ import org.jetbrains.annotations.NotNull;
 
 public final class EndChatCommand implements CommandExecutor {
 
-    private final ChatService chatService;
+    private final AicraftPlugin plugin;
 
-    public EndChatCommand(ChatService chatService) {
-        this.chatService = chatService;
+    public EndChatCommand(AicraftPlugin plugin) {
+        this.plugin = plugin;
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class EndChatCommand implements CommandExecutor {
             return true;
         }
 
-        if (chatService.getActiveChat(player.getUniqueId()).isEmpty()) {
+        if (plugin.chatService().getActiveChat(player.getUniqueId()).isEmpty()) {
             player.sendMessage(ChatMessages.PREFIX.append(Component.text(
                     "No active chat. Start one with /newchat.",
                     NamedTextColor.RED
@@ -37,15 +37,31 @@ public final class EndChatCommand implements CommandExecutor {
             return true;
         }
 
-        try {
-            chatService.endChat(player.getUniqueId());
-            player.sendMessage(ChatMessages.PREFIX.append(Component.text("Chat ended.", NamedTextColor.GRAY)));
-        } catch (Exception e) {
-            player.sendMessage(ChatMessages.PREFIX.append(Component.text(
-                    "Failed to end chat: " + e.getMessage(),
-                    NamedTextColor.RED
-            )));
-        }
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () ->
+                plugin.chatService().endChat(player.getUniqueId()).whenComplete((ignored, error) ->
+                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            if (!player.isOnline()) {
+                                return;
+                            }
+                            if (error != null) {
+                                player.sendMessage(ChatMessages.PREFIX.append(Component.text(
+                                        "Failed to end chat: " + unwrap(error).getMessage(),
+                                        NamedTextColor.RED
+                                )));
+                                return;
+                            }
+                            player.sendMessage(ChatMessages.PREFIX.append(Component.text(
+                                    "Chat ended.", NamedTextColor.GRAY)));
+                        }))
+        );
         return true;
+    }
+
+    private static Throwable unwrap(Throwable error) {
+        Throwable cause = error;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause;
     }
 }

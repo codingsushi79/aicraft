@@ -1,6 +1,6 @@
 package dev.aicraft.command;
 
-import dev.aicraft.model.ChatRecord;
+import dev.aicraft.AicraftPlugin;
 import dev.aicraft.service.ChatService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -12,10 +12,10 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ReopenChatCommand implements CommandExecutor {
 
-    private final ChatService chatService;
+    private final AicraftPlugin plugin;
 
-    public ReopenChatCommand(ChatService chatService) {
-        this.chatService = chatService;
+    public ReopenChatCommand(AicraftPlugin plugin) {
+        this.plugin = plugin;
     }
 
     @Override
@@ -49,20 +49,37 @@ public final class ReopenChatCommand implements CommandExecutor {
             return true;
         }
 
-        try {
-            ChatRecord chat = chatService.reopenChat(player.getUniqueId(), chatNumber);
-            player.sendMessage(ChatMessages.PREFIX.append(Component.text(
-                    "Reopened chat #" + chat.playerChatNumber() + ". Continue with /ai <message>.",
-                    NamedTextColor.GRAY
-            )));
-        } catch (ChatService.ChatException e) {
-            player.sendMessage(ChatMessages.PREFIX.append(Component.text(e.getMessage(), NamedTextColor.RED)));
-        } catch (Exception e) {
-            player.sendMessage(ChatMessages.PREFIX.append(Component.text(
-                    "Failed to reopen chat: " + e.getMessage(),
-                    NamedTextColor.RED
-            )));
-        }
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () ->
+                plugin.chatService().reopenChat(player.getUniqueId(), chatNumber)
+                        .whenComplete((chat, error) -> plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            if (!player.isOnline()) {
+                                return;
+                            }
+                            if (error != null) {
+                                Throwable cause = unwrap(error);
+                                if (cause instanceof ChatService.ChatException chatError) {
+                                    player.sendMessage(ChatMessages.PREFIX.append(Component.text(
+                                            chatError.getMessage(), NamedTextColor.RED)));
+                                } else {
+                                    player.sendMessage(ChatMessages.PREFIX.append(Component.text(
+                                            "Failed to reopen chat: " + cause.getMessage(), NamedTextColor.RED)));
+                                }
+                                return;
+                            }
+                            player.sendMessage(ChatMessages.PREFIX.append(Component.text(
+                                    "Reopened chat #" + chat.playerChatNumber() + ". Continue with /ai <message>.",
+                                    NamedTextColor.GRAY
+                            )));
+                        }))
+        );
         return true;
+    }
+
+    private static Throwable unwrap(Throwable error) {
+        Throwable cause = error;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause;
     }
 }

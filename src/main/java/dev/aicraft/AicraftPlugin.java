@@ -47,11 +47,11 @@ public final class AicraftPlugin extends JavaPlugin {
             return;
         }
 
-        if (!registerCommand("newchat", new NewChatCommand(chatService))
-                || !registerCommand("endchat", new EndChatCommand(chatService))
+        if (!registerCommand("newchat", new NewChatCommand(this))
+                || !registerCommand("endchat", new EndChatCommand(this))
                 || !registerCommand("ai", new AiCommand(this, chatService))
-                || !registerCommand("reopenchat", new ReopenChatCommand(chatService))
-                || !registerCommand("ailink", new AiLinkCommand(linkService))) {
+                || !registerCommand("reopenchat", new ReopenChatCommand(this))
+                || !registerCommand("ailink", new AiLinkCommand(this))) {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -78,6 +78,7 @@ public final class AicraftPlugin extends JavaPlugin {
         }
         if (chatService != null) {
             chatService.sessionManager().clearAll();
+            chatService.close();
         }
         if (aiClient != null) {
             aiClient.shutdown();
@@ -93,6 +94,9 @@ public final class AicraftPlugin extends JavaPlugin {
         pluginConfig = PluginConfig.from(getConfig());
         webConfig = WebConfig.from(loadWebConfig());
 
+        if (chatService != null) {
+            chatService.close();
+        }
         if (aiClient != null) {
             aiClient.shutdown();
         }
@@ -107,8 +111,8 @@ public final class AicraftPlugin extends JavaPlugin {
         LinkRepository linkRepository = new LinkRepository(databaseManager);
         ChatSessionManager sessionManager = new ChatSessionManager(pluginConfig);
         RateLimitService rateLimitService = new RateLimitService(webConfig, chatRepository);
-        linkService = new LinkService(webConfig, linkRepository);
         chatService = new ChatService(pluginConfig, chatRepository, sessionManager, rateLimitService, aiClient);
+        linkService = new LinkService(webConfig, linkRepository, chatService.dbExecutor());
     }
 
     private FileConfiguration loadWebConfig() {
@@ -126,6 +130,10 @@ public final class AicraftPlugin extends JavaPlugin {
 
     public ChatService chatService() {
         return chatService;
+    }
+
+    public LinkService linkService() {
+        return linkService;
     }
 
     private boolean registerCommand(String name, org.bukkit.command.CommandExecutor executor) {

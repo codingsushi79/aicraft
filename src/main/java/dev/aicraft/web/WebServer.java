@@ -178,7 +178,7 @@ public final class WebServer implements AutoCloseable {
             return;
         }
         try {
-            linkService.startLinkRequest(username.trim());
+            linkService.startLinkRequest(username.trim()).join();
             json(exchange, 200, Map.of(
                     "status", "waiting_for_game",
                     "message", "Run /ailink in-game, then enter the code shown to you."
@@ -197,7 +197,7 @@ public final class WebServer implements AutoCloseable {
             return;
         }
         try {
-            WebSession session = linkService.confirmLink(username.trim(), code.trim());
+            WebSession session = linkService.confirmLink(username.trim(), code.trim()).join();
             Headers headers = exchange.getResponseHeaders();
             headers.add("Set-Cookie", SESSION_COOKIE + "=" + session.token()
                     + "; Path=/; HttpOnly; Max-Age=" + (60L * 60 * 24 * webConfig.webSessionDays()));
@@ -215,7 +215,7 @@ public final class WebServer implements AutoCloseable {
     private void handleLogout(HttpExchange exchange) throws IOException {
         session(exchange).ifPresent(session -> {
             try {
-                linkService.logout(session.token());
+                linkService.logout(session.token()).join();
             } catch (Exception ignored) {
                 // Best effort logout.
             }
@@ -242,7 +242,7 @@ public final class WebServer implements AutoCloseable {
         if (session.isEmpty()) {
             return;
         }
-        List<ChatRecord> chats = chatService.listChats(session.get().playerUuid());
+        List<ChatRecord> chats = chatService.listChatsAsync(session.get().playerUuid()).join();
         json(exchange, 200, chats.stream().map(this::chatToMap).toList());
     }
 
@@ -253,7 +253,8 @@ public final class WebServer implements AutoCloseable {
         }
         WebSession webSession = session.get();
         try {
-            ChatRecord chat = chatService.startChat(webSession.playerUuid(), webSession.username(), ChatSource.WEB);
+            ChatRecord chat = chatService.startChat(
+                    webSession.playerUuid(), webSession.username(), ChatSource.WEB).join();
             json(exchange, 200, chatToMap(chat));
         } catch (RateLimitService.RateLimitException e) {
             error(exchange, 429, e.getMessage());
@@ -266,7 +267,8 @@ public final class WebServer implements AutoCloseable {
             return;
         }
         try {
-            List<StoredMessage> messages = chatService.listMessages(session.get().playerUuid(), chatId);
+            List<StoredMessage> messages = chatService.listMessagesAsync(
+                    session.get().playerUuid(), chatId).join();
             json(exchange, 200, messages.stream()
                     .filter(message -> !"system".equals(message.role()))
                     .map(message -> Map.of(
@@ -293,7 +295,7 @@ public final class WebServer implements AutoCloseable {
             return;
         }
         try {
-            chatService.reopenChatById(session.get().playerUuid(), chatId);
+            chatService.reopenChatById(session.get().playerUuid(), chatId).join();
             String reply = chatService.sendMessage(session.get().playerUuid(), content.trim(), null).join();
             json(exchange, 200, Map.of("reply", reply));
         } catch (ChatService.ChatException e) {
@@ -329,7 +331,7 @@ public final class WebServer implements AutoCloseable {
             return Optional.empty();
         }
         try {
-            return linkService.findSession(token);
+            return linkService.findSession(token).join();
         } catch (Exception e) {
             return Optional.empty();
         }
